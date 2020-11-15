@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--저장한 사진의 경로 지정: 외부 경로, 다른 곳에서 접근 가능할 수 있게(안드로이드 공식 doc 참고-->
+<!--https://developer.android.com/reference/androidx/core/content/FileProvider#SpecifyFiles-->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-path name="photos" path="Android/data/com.example.zekak/files/"/>
+</paths>

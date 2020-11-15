@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".AppMain">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/app_bar_height"
+        android:fitsSystemWindows="true"
+        android:theme="@style/Theme.ZEKAK.AppBarOverlay">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:id="@+id/toolbar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="true"
+            app:contentScrim="?attr/colorPrimary"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:toolbarId="@id/toolbar">
+
+<!--            No toolbars _ 그냥 디자인 측면에서 시도-->
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"
+                app:popupTheme="@style/Theme.ZEKAK.PopupOverlay" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <ImageButton
+                    android:id="@+id/menu_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right|end"
+                    android:layout_marginRight="30dp"
+                    android:layout_marginTop="30dp"
+                    android:background="@drawable/ic_baseline_menu_24"/>
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+
+                    <TextView
+                        android:id="@+id/category_change"
+                        android:layout_width="200dp"
+                        android:layout_marginStart="40dp"
+                        android:layout_height="wrap_content"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="italic|bold"
+                        android:text="ZEKAK"
+                        android:textSize="30sp"
+                        android:ellipsize="marquee"/>
+
+
+                    <Spinner
+                        android:id="@+id/category_changeeeeeee"
+                        android:layout_width="220dp"
+                        android:layout_height="30dp"
+                        style="@style/TextAppearance.AppCompat.Widget.TextView.SpinnerItem"
+                        android:layout_marginStart="40dp"
+                        android:dropDownVerticalOffset="?attr/dropdownListPreferredItemHeight"
+                        android:spinnerMode="dropdown"
+                        android:popupBackground="@drawable/category_dropdown"
+                        android:visibility="invisible"/>
+                </RelativeLayout>
+
+
+
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="40dp"
+                    android:paddingTop="@dimen/text_margin"
+                    android:text="Total Items"
+                    android:textSize="15sp"/>
+
+                <TextView
+                    android:id="@+id/item_count_display"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="40dp"
+                    android:layout_marginBottom="50dp"
+                    android:textSize="25sp"
+                    android:textStyle="italic|bold"
+                    android:text="000"/>
+
+            </LinearLayout>
+
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <include layout="@layout/content_scrolling" />
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/add_item_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/fab_margin"
+        app:layout_anchor="@id/app_bar"
+        app:layout_anchorGravity="bottom|end"
+        app:srcCompat="@drawable/ic_baseline_add_24"
+        tools:tint="@color/white"/>
+
+    <!-- 그 애드 막 펼쳤을 때 나오는 3개 버튼, id 때문에 잠깐 만들어 놓은거라 완전 수정 필요 -->
+    <ImageButton
+        android:id="@+id/cancel_add_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+    <ImageButton
+        android:id="@+id/barcode_add_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+    <ImageButton
+        android:id="@+id/manual_add_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

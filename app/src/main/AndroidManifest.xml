@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.zekak">
+
+    <!-- 인터넷 사용권한 획득 -->
+    <uses-permission android:name = "android.permission.INTERNET"/>
+    <!-- 카메라 사용권한 획득 -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.flash" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.front" android:required="false"/>
+    <!-- 카메라 사용권한 사용 -->
+    <uses-feature android:name="android.hardware.camera2"/>
+
+    <!-- 갤러리 사용권한 획득 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <application
+        android:hardwareAccelerated="false"
+        android:largeHeap="true"
+        android:theme="@style/Theme.ZEKAK"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:requestLegacyExternalStorage="true" >
+
+<!--        For photo uris (Nougat 이상) -->
+<!--        xml/filepaths 참고하면 파일명 지정해 놨음-->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.zekak.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
+
+        <activity
+            android:name=".AppMain"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.ZEKAK.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".BarcodeScanningActivity"
+            android:screenOrientation="fullSensor"
+            android:stateNotNeeded="true"/>
+        <activity android:name=".InfoItem"
+            android:theme="@style/Theme.ZEKAK.NoActionBar"/>
+        <activity android:name=".AddItem"
+            android:theme="@style/Theme.ZEKAK.NoActionBar"
+            android:launchMode="singleInstance"
+            android:configChanges="orientation|screenSize"/>
+    </application>
+
+</manifest>

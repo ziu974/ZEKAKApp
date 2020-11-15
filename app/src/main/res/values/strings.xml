@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ZEKAK</string>
+
+    <string name="delete_ask">(삭제 후 복구가 불가능합니다.)</string>
+    <string name="all_used_ask">모두 먹음 처리하시겠습니까?</string>
+
+</resources>

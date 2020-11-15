@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="5dp"
+    android:layout_marginStart="-10dp"
+    android:layout_marginEnd="10dp"
+    card:cardCornerRadius="10dp"
+    card:cardElevation="0dp">
+
+    <RelativeLayout
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/list_tab"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/item_tab_background"
+        android:padding="8dp"
+        android:paddingStart="18dp">
+
+
+        <ImageView
+            android:id="@+id/item_image"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            app:srcCompat="@drawable/ic_stat_name"
+            android:scaleType="centerCrop"
+            app:tint="@color/light_grey"/>
+
+        <TextView
+            android:id="@+id/item_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/item_image"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="5dp"
+            android:text="ITEM NAME"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@color/navy" />
+
+        <TextView
+            android:id="@+id/exp_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="bottom"
+            android:layout_below="@id/item_name"
+            android:layout_alignBottom="@id/exp_date"
+            android:layout_toEndOf="@id/item_image"
+            android:layout_marginStart="20dp"
+            android:text="EXP"
+            android:textAlignment="gravity"
+            android:textColor="@color/text_small_grey"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/exp_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/item_name"
+            android:layout_toEndOf="@+id/exp_label"
+            android:layout_marginStart="5dp"
+            android:text="2020.00.00"
+            android:textColor="@color/text_grey"
+            android:textSize="20sp"
+            android:textStyle="bold"/>
+
+        <ProgressBar
+            android:id="@+id/portion_bar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:progressDrawable="@drawable/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:progress="70"
+            android:layout_toEndOf="@id/item_image"
+            android:layout_below="@id/exp_label"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="30dp"/>
+
+        <!-- turn ':visibility' into 'gone' if 재구매 버튼 만들거면 (다른 버튼 넣어야되니까)-->
+
+        <ImageView
+            android:id="@+id/pin_icon"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
+            android:adjustViewBounds="false"
+            android:cropToPadding="false"
+            android:rotation="30"
+            android:visibility="invisible"
+            app:srcCompat="@drawable/ic_baseline_push_pin_24"
+            app:tint="@color/text_grey" />
+
+        <ImageView
+            android:id="@+id/swipe_guide_bar"
+            android:layout_width="5dp"
+            android:layout_height="50dp"
+            app:srcCompat="@drawable/stick_jiu"
+            android:layout_centerInParent="true"
+            android:layout_alignParentEnd="true"/>
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>
+
+
+

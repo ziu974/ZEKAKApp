@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AddItem">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true">
+
+
+    <RelativeLayout
+        android:background="@color/background"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="top"
+        android:padding="40dp">
+
+
+        <TextView
+            android:id="@+id/label_add_item"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Item"
+            android:textStyle="bold"
+            android:textSize="25sp"
+            android:textColor="@color/text_grey"/>
+
+
+
+        <ImageView
+            android:id="@+id/cancel_add_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            app:srcCompat="@drawable/ic_baseline_close_24"
+            app:tint="@color/text_grey"
+            android:visibility="invisible"/>
+
+        <ImageView
+            android:id="@+id/cancel_edit_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            app:srcCompat="@drawable/ic_baseline_close_24"
+            app:tint="@color/text_grey"
+            android:visibility="invisible"/>
+
+<!--        <ImageButton-->
+<!--            android:layout_width="130dp"-->
+<!--            android:layout_height="130dp"-->
+<!--            android:layout_alignTop="@id/group1"-->
+<!--            android:elevation="10dp"-->
+<!--            android:background="@color/white"-->
+<!--            android:scaleType="center"-->
+<!--            app:srcCompat="@drawable/ic_baseline_add_24" />-->
+
+
+        <LinearLayout
+            android:id="@+id/group1"
+            android:layout_below="@id/label_add_item"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/image_item_photo"
+                android:layout_width="130dp"
+                android:layout_height="130dp"
+                android:layout_marginEnd="10dp"
+                android:background="@color/white"
+                android:rotation="90"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/ic_baseline_add_24" />
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="200dp"
+                android:layout_margin="10dp"
+                android:layout_gravity="center"
+                android:layout_below="@id/text_item_name">
+                <TextView
+                    android:id="@+id/text_barcode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="bottom"
+                    android:text="BARCODE"
+                    android:textColor="@color/text_small_grey"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/item_barcode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/text_barcode"
+                    android:text="(none)"
+                    android:textColor="@color/text_grey"
+                    android:textSize="18sp"/>
+
+                <TextView
+                    android:id="@+id/text_product"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="bottom"
+                    android:layout_below="@id/item_barcode"
+                    android:layout_marginTop="20dp"
+                    android:text="PRODUCT"
+                    android:textColor="@color/text_small_grey"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/item_product"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="bottom"
+                    android:layout_below="@id/text_product"
+                    android:text="(product name)"
+                    android:textColor="@color/text_grey"
+                    android:textSize="18sp" />
+
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/text_item_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/group1"
+            android:text="식재료명"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginTop="15dp"/>
+
+
+        <EditText
+            android:id="@+id/edit_item_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/text_item_name"
+            android:hint=""
+            android:singleLine="true"
+            android:maxLength="20"
+            android:inputType="text"/>
+
+        <TextView
+            android:id="@+id/text_item_exp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/edit_item_name"
+            android:text="유통기한"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginTop="10dp"/>
+
+
+        <LinearLayout
+            android:id="@+id/group2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/text_item_exp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/edit_item_exp"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="20dp"
+                android:backgroundTint="@color/white"
+                android:textColor="@color/text_grey" />
+
+            <TextView
+                android:id="@+id/item_product_exp"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_weight="2"
+                android:layout_gravity="center"
+                android:gravity="left|center"
+                android:text="(제품 유통기한)"
+                android:textSize="12sp"
+                android:textColor="@color/navy" />
+
+        </LinearLayout>
+
+
+
+        <TextView
+            android:id="@+id/text_item_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/group2"
+            android:text="카테고리"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginTop="10dp"/>
+
+        <Spinner
+            android:id="@+id/edit_item_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="100dp"
+            android:layout_below="@id/text_item_category"
+            android:dropDownSelector="@color/text_grey"
+            android:prompt="@string/app_name"/>
+
+
+
+        <LinearLayout
+            android:id="@+id/group3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/edit_item_category"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp">
+
+            <TextView
+                android:id="@+id/text_item_portion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:layout_gravity="center"
+                android:text="양(1회분)"
+                android:textSize="12sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/text_item_pin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="핀"
+                android:textSize="12sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/group4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/group3"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/edit_item_portion"
+                android:layout_width="10dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:backgroundTint="@color/white"
+                android:textColor="@color/text_grey"/>
+
+            <Switch
+                android:id="@+id/edit_item_pin"
+                style="@style/Widget.AppCompat.CompoundButton.Switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="50dp"
+                android:layout_weight="1"
+                android:checked="false"
+                android:clickable="true"
+                android:switchMinWidth="60dp"
+                tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/text_item_memo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/group4"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp"
+            android:text="메모"
+            android:textSize="12sp"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/edit_item_memo"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_below="@id/text_item_memo"
+            android:padding="10dp"
+            android:layout_marginBottom="20dp"
+            android:background="@color/white"
+            android:scrollbars="vertical"
+            android:gravity="top"
+            android:textAlignment="gravity"
+            android:textSize="15sp"
+            android:hint="Write here"/>
+
+        <TextView
+            android:id="@+id/item_add_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/edit_item_memo"
+            android:text="ADD ITEM"
+            android:textColor="@color/navy"
+            android:textStyle="bold"
+            android:textSize="15sp"
+            android:textAlignment="center"
+            android:padding="10dp"
+            android:layout_marginHorizontal="30dp"
+            android:background="@drawable/button_stroke_background_drawable"
+            android:visibility="invisible"
+            />
+
+        <TextView
+            android:id="@+id/item_edit_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/edit_item_memo"
+            android:text="EDIT ITEM"
+            android:textColor="@color/navy"
+            android:textStyle="bold"
+            android:textSize="15sp"
+            android:textAlignment="center"
+            android:padding="10dp"
+            android:layout_marginHorizontal="30dp"
+            android:background="@drawable/button_stroke_background_drawable"
+            android:visibility="invisible"
+            />
+
+    </RelativeLayout>
+
+
+</androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
