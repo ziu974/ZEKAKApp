@@ -6,11 +6,13 @@ import android.app.Dialog;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -488,16 +490,11 @@ public class AddItem extends AppMain {
 
     private void setImage(boolean makeCopy) throws IOException {
         // 사진의 절대경로 불러와 bitmap 파일로 변형 --> ImageView에 이미지 넣음
-        BitmapFactory.Options options = new BitmapFactory.Options();
         Bitmap originalBm = null;          // 변환된 bitmap
+        Bitmap croppedBm;            // 크롭된 bitmap (thumbnail용, 저장용)
         if(Build.VERSION.SDK_INT >= 29){
             try {
                 originalBm = ImageDecoder.decodeBitmap(ImageDecoder.createSource(getContentResolver(), Uri.fromFile(tempFile))); // 이 파일 내용을 bitmap으로 decode
-                if (originalBm != null) {
-                    // TODO: 카메라도 사이즈 compress 필요함
-                    //originalBm.compress(Bitmap.CompressFormat.JPEG, 10, )
-                    btnAddImage.setImageBitmap(originalBm);
-                }
             } catch (IOException e){
                     e.printStackTrace();
             }
@@ -505,57 +502,52 @@ public class AddItem extends AppMain {
             Log.i("핸드폰을 그냥 새로 사세요", "ㅎㅎ");
             try {
                 originalBm = MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.fromFile(tempFile));
-                if(originalBm != null) {
-                    btnAddImage.setImageBitmap(originalBm);
-                }
             } catch (IOException e){
                 e.printStackTrace();
             }
         }
-
-        if(makeCopy){       // 1. 갤러리에서 고른 사진일 경우, 자체 폴더에 복사본 저장 (for 나중 서버 추가)
-            File copyFile = createImageFile();          // 복사할 file
-            FileOutputStream fOut = new FileOutputStream(copyFile);     // file's path
-            originalBm.compress(Bitmap.CompressFormat.JPEG, 10, fOut); // 무손실로 .jpeg 파일로 저장
-            fOut.flush();
-            fOut.close();
-            photo = copyFile.getName();
-        } else {            // 2. 카메라 촬영 사진
-            //photo = tempFile.getAbsolutePath();     // 하나의 디바이스에서만 사용가능
-            // 11/15 CODE: 포토 -- 아래 걸로 바꿈 (절대경로 아닌, 그냥 "*.jpg"만)
-            photo = tempFile.getName();
+        if(originalBm != null){
+            //croppedBm = Bitmap.createScaledBitmap(originalBm, 130, 130, true);
+            btnAddImage.setImageBitmap(originalBm);
         }
-        Log.i("photo 이름 내용", photo);
+
+//        if(makeCopy){       // 1. 갤러리에서 고른 사진일 경우, 자체 폴더에 복사본 저장 (for 나중 서버 추가) or 2. 카메라 촬영 사진
+//            File copyFile = createImageFile();          // 복사할 file
+//            FileOutputStream fOut = new FileOutputStream(copyFile);     // file's path
+//            //originalBm.compress(Bitmap.CompressFormat.JPEG, 10, fOut); //  10%대 손실로 .jpeg 파일로 저장
+//            //test//////////originalBm.reconfigure();
+//            btnAddImage.getDrawingCache(true).compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+//            fOut.flush();
+//            fOut.close();
+//            add_photo_background.xml = copyFile.getName();
+//        } else {            // 3. 아이템 수정 시 원래 사진
+//            //add_photo_background.xml = tempFile.getAbsolutePath();     // 하나의 디바이스에서만 사용가능
+//            // 11/15 CODE: 포토 -- 아래 걸로 바꿈 (절대경로 아닌, 그냥 "*.jpg"만)
+//            add_photo_background.xml = tempFile.getName();
+//        }
     }
 
-
+    private void compressImage() throws IOException {       // 현재 버튼 썸네일을 파일로 저장(원본 ㄴㄴㄴㄴㄴㄴㄴㄴㄴㄴㄴㄴㄴㄴㄴㄴㄴㄴㄴㄴ)
+        File copyFile = createImageFile();          // 복사할 file
+        FileOutputStream fOut = new FileOutputStream(copyFile);
+        Bitmap temp = ((BitmapDrawable) btnAddImage.getDrawable()).getBitmap();
+        temp.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+        fOut.flush();
+        fOut.close();
+        photo = copyFile.getName();
+    }
 
 
     public void takePhoto() {
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-        try {
-            tempFile = createImageFile();
-        } catch (IOException e) {
-            Toast.makeText(this, "Error making file (file name)", Toast.LENGTH_SHORT).show();
-            finish();
-            e.printStackTrace();
-        }
-        if(tempFile != null) {
-            // 7.0부터 정책 변경> Uri photoUri = Uri.fromFile(tempFile);
-            Uri photoUri = FileProvider.getUriForFile(this, "com.example.zekak.fileprovider", tempFile);    // 11.15 (code:포토) mainfestfile 참고
-            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-            //cameraIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION, "horizontal");
-            //cameraIntent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, "10");
-            //cameraIntent.setClipData( ClipData.newRawUri( "", photoUri) );      // 사진 다시 불러올 수 있게
-            //cameraIntent.addFlags( Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_READ_URI_PERMISSION );
-            startActivityForResult(cameraIntent, PICK_FROM_CAMERA);
-        }
+        //사진찍고+crop+rotate(-90도)+reduce size 까지 한 다음에 그거에다가 파일명 주고 저장할거라 원본은 저장 ㄴㄴ)
+        startActivityForResult(cameraIntent, PICK_FROM_CAMERA);
     }
 
     private File createImageFile() throws IOException {     // 카메라 추가인 경우
         // 이미지 파일 이름 (CODE: 포토) 즉 DB의 photo에 들어갈 것: "zekak_(시간)*.jpg")
-        String timeStamp = new SimpleDateFormat("yyMMdd_HHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyMMdd_HHmm").format(new Date());
         String ImageFileName = "zekak_"+timeStamp;
 
         // 이미지 저장될 폴더 이름, xml/filepaths참고 (Android/data/com.example.zekak/files/)
@@ -598,15 +590,28 @@ public class AddItem extends AppMain {
 
             try{
                 setImage(true);         // 갤러리 사진 뷰에 적용, 복사본 생성
+                compressImage();
             } catch (IOException e){}
         }
 
         // Photo from camera
         if(requestCode == PICK_FROM_CAMERA) {
-            Log.i("여기 들어갔나", "응");
-            try{
-                setImage(false);        // 카메라 사진 뷰에 적용, 복사본은 만들지 않음
-            } catch (IOException e){}
+            //Uri photoUri = data.getData();
+            if (resultCode == RESULT_OK) {      // 이부분 https://developer.android.com/training/camera/photobasics?hl=ko#java 참고
+                Bundle extras = data.getExtras();
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
+                btnAddImage.setImageBitmap(imageBitmap);
+                try {
+                    compressImage();     // just
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+//
+//            try{
+//                tempFile = new File(photoUri.getPath().toString());
+//                setImage(true);        // 카메라 사진 뷰에 적용, 복사본은 만들지 않음--> 아니다, 사진이 너무 커서 크롭, 회전, 크기줄이기 다 한담에 그거 우리 어플 파일에 새로 복사
+//            } catch (IOException e){}
         }
 
         // ERROR 처리

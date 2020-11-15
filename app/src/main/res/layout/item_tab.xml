@@ -24,9 +24,8 @@
             android:id="@+id/item_image"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            app:srcCompat="@drawable/ic_stat_name"
             android:scaleType="centerCrop"
-            app:tint="@color/light_grey"/>
+            app:srcCompat="@drawable/ic_stat_name"/>
 
         <TextView
             android:id="@+id/item_name"

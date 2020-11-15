@@ -72,21 +72,16 @@
 
                 <ImageView
                     android:id="@+id/image_item_photo"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    app:layout_constraintDimensionRatio="H,1:1"
-                    android:layout_weight="1"
+                    android:layout_width="130dp"
+                    android:layout_height="130dp"
                     android:layout_below="@id/text_item_name"
                     android:layout_marginRight="10dp"
                     android:scaleType="centerCrop"
-                    app:srcCompat="@drawable/ic_stat_name"
-                    app:tint="@color/navy"
-                    />
+                    app:srcCompat="@drawable/ic_stat_name"/>
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_below="@id/text_item_name">
                     <TextView
                         android:id="@+id/exp_label"

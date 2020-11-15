@@ -18,7 +18,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
-        android:hardwareAccelerated="false"
+        android:hardwareAccelerated="true"
         android:largeHeap="true"
         android:theme="@style/Theme.ZEKAK"
         android:allowBackup="true"
@@ -28,7 +28,7 @@
         android:supportsRtl="true"
         android:requestLegacyExternalStorage="true" >
 
-<!--        For photo uris (Nougat 이상) -->
+<!--        For add_photo_background.xml uris (Nougat 이상) -->
 <!--        xml/filepaths 참고하면 파일명 지정해 놨음-->
         <provider
             android:name="androidx.core.content.FileProvider"

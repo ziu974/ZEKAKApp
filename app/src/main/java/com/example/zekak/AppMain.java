@@ -1,4 +1,4 @@
-package com.example.zekak;
+ package com.example.zekak;
 
 import android.Manifest;
 import android.app.Activity;
@@ -121,7 +121,6 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
         if(!imagePath.exists()){   // 없으면 만듦
             imagePath.mkdirs();
         }
-        Log.i("im바ㅏㅇ앙아아아아아ㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏagePath: ", imagePath.getPath());
 
 
         // PART2: Prefs part (설정값: 카테고리 불러오기)
@@ -243,17 +242,24 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
             return false;
     }
 
+//    @Override
+//    protected void onResume() {
+//        Log.i("여기에서 리쥼을 왜해", "아");
+//        super.onResume();
+//        if(firstAttempt) {
+//            customListAdapter.notifyDataSetChanged();
+//            categoryAdapter.notifyDataSetChanged();
+//            //restartActivity();
+//            recyclerView.swapAdapter(customListAdapter, false);
+//        }
+//        firstAttempt = true;
+//    }
+
+
     @Override
-    protected void onPause() {
-        Log.i("여기에서 리쥼을 왜해", "아");
-        super.onPause();
-        if(firstAttempt) {
-            customListAdapter.notifyDataSetChanged();
-            categoryAdapter.notifyDataSetChanged();
-            //restartActivity();
-            recyclerView.swapAdapter(customListAdapter, false);
-        }
-        firstAttempt = true;
+    protected void onDestroy() {
+        super.onDestroy();
+        itemsDB.db_close();
     }
 
     private void restartActivity() {        // refresh the AppMain (카테고리 추가/삭제, 아이템추가 등등)
@@ -385,7 +391,7 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
                     //
                     //TODO  :임시 코드 , test 해볼라고
                     intent = new Intent(AppMain.this, AddItem.class);
-                    intent.putExtra("INITIAL_CATEGORY", categoryList.indexOf(currentCategory));
+                    intent.putExtra("INITIAL_CATEGORY", categoryList.indexOf(currentCategory)-1);
                     intent.putExtra("EXTRA_SESSION_ID", "manual");
                     startActivityForResult(intent, MANUAL_ADD);
                     break;
@@ -437,7 +443,7 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
             if((resultCode == ITEM_ADDED)) {       // 데이터베이스에 추가까지 마친상태
                 Item newItem = (Item) data.getParcelableExtra("NEW_ITEM");
                 categoryItemList.add(newItem);
-                customListAdapter.notifyItemInserted(0);
+                //customListAdapter.notifyItemInserted(0);
             } else if(resultCode == ITEM_EDITED){   // 아이템 수정 성공
                //TODO
 //                categoryItemList.remove();

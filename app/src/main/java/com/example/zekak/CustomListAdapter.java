@@ -5,6 +5,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
+import android.os.Build;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.DragEvent;
 import android.view.LayoutInflater;
@@ -20,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.zekak.AppMain.Item;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,23 +77,20 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Vi
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {           // 아이템 탭에 내용 매핑
+
         if(itemDisplay.get(position).category.equals(targetCategory)){              // 설정한 카테고리에 있는 것들만 매핑
             holder.itemID = itemDisplay.get(position).id;
 
             // (CODE: 포토) 파일 경로에서 파일 이름 append해서 이미지 가져옴(절대경로X)
-            File tempFile = new File(imagePath, itemDisplay.get(position).photo);
-            Bitmap originalBm = BitmapFactory.decodeFile(Uri.fromFile(tempFile).getPath());
-//            BitmapFactory.
-//            Bitmap originalBm = ImageDecoder.decodeBitmap(ImageDecoder.createSource(getContentResolver(), Uri.fromFile(tempFile)));
-//
-//
-//            Bitmap originalBm = BitmapFactory.decodeFile(itemDisplay.get(position).photo);
+            String path = imagePath.getPath() + "/"+itemDisplay.get(position).photo;
+            holder.iImageView.setImageBitmap(BitmapFactory.decodeFile(path));
+
             //Item.portion의 0# 같은 형태를 setProgress()에 적용
             int divided = itemDisplay.get(position).portion / 10;   // 사용자 1회분 설정값
             int used = itemDisplay.get(position).portion - divided * 10; // 사용량
 
             holder.mItem = itemDisplay.get(position);
-            holder.iImageView.setImageBitmap(originalBm);
+            ///////임시 holder.iImageView.setImageBitmap(originalBm);
             holder.iNameView.setText(itemDisplay.get(position).name);
             holder.iExpView.setText(itemDisplay.get(position).exp);
             holder.iPortionView.setProgress(used/divided * 100);

@@ -4,8 +4,11 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -19,6 +22,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -97,21 +101,19 @@ public class InfoItem extends AppMain {
         if(itemInfo.flag){
             pin.setVisibility(View.VISIBLE);    // OR View.INVISIBLE
         }
-        // photo thumbnail
-        //TODO: (CODE: 포토) 103번 줄 CUstomListAdapter.java의 81번 줄과 비교
-        if(itemInfo.photo != null){
-            File tempFile = new File(imagePath, itemInfo.photo);
-            Bitmap originalBm = BitmapFactory.decodeFile(Uri.fromFile(tempFile).getPath());
-            photo.setImageBitmap(originalBm);
+        // add_photo_background.xml thumbnail
+        //(CODE: 포토) 이렇게 하면 이미지 잘 뜸!!! (최종 끝)
+        if(itemInfo.photo != null) {
+            String path = imagePath.getPath() + "/" + itemInfo.photo;
+            photo.setImageBitmap(BitmapFactory.decodeFile(path));
         }
-
 
         // exp info
         exp.setText(itemInfo.exp);
         calcRemainingDates(itemInfo.exp);
 
         // item portion bar
-        portion.setText("남은 양\\n(설정된 1회분: "+divided+")");
+        portion.setText("남은 양\n(설정된 1회분: "+divided+")");
         portionBar.setProgress(used/divided * 100);
         portionLabel.setText(used+"/"+divided);
         // memo

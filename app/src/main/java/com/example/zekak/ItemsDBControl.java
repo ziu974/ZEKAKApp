@@ -21,7 +21,7 @@ public class ItemsDBControl extends AppCompatActivity {
     public ItemsDBControl(Context context){
         this.context = context;
         helper = new ItemsDBHelper(context);
-        db = context.openOrCreateDatabase(helper.DATABASE_NAME, MODE_ENABLE_WRITE_AHEAD_LOGGING, null);
+        db = context.openOrCreateDatabase(helper.DATABASE_NAME, MODE_PRIVATE, null);
     }
 
 
