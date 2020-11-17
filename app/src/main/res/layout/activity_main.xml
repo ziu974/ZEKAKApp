@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -6,6 +7,9 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:context=".AppMain">
+
+
+
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar"
@@ -36,7 +40,7 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical">
 
-                <ImageButton
+                <ActionMenuView
                     android:id="@+id/menu_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -102,6 +106,7 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
+
     <include layout="@layout/content_scrolling" />
 
 
@@ -109,25 +114,87 @@
         android:id="@+id/add_item_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/fab_margin"
-        app:layout_anchor="@id/app_bar"
-        app:layout_anchorGravity="bottom|end"
         app:srcCompat="@drawable/ic_baseline_add_24"
-        tools:tint="@color/white"/>
+        app:tint="@color/white"
+        app:layout_anchor="@id/app_bar"
+        android:orientation="vertical"
+        android:layout_margin="@dimen/fab_margin"
+        app:layout_anchorGravity="bottom|end"
+        app:backgroundTint="@color/navy"
+        app:rippleColor="@color/light_grey"
+        />
 
-    <!-- 그 애드 막 펼쳤을 때 나오는 3개 버튼, id 때문에 잠깐 만들어 놓은거라 완전 수정 필요 -->
-    <ImageButton
-        android:id="@+id/cancel_add_btn"
+
+
+
+    <RelativeLayout
+        android:id="@+id/fab_group"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-    <ImageButton
-        android:id="@+id/barcode_add_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-    <ImageButton
-        android:id="@+id/manual_add_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:gravity="top"
+        app:layout_anchor="@id/add_item_btn"
+        app:layout_anchorGravity="top|end"
+        android:layout_marginEnd="@dimen/fab_margin"
+        android:layout_gravity="bottom"
+        android:background="@drawable/button_background_drawable"
+        android:backgroundTint="@color/portion_bar_item"
+        >
+
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/barcode_add_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/white"
+            android:visibility="visible"
+            android:layout_marginHorizontal="4dp"
+            android:layout_marginTop="60dp"
+            app:borderWidth="0dp"
+            app:fabSize="mini"
+            app:srcCompat="@drawable/barcode_add_icon"
+            app:tint="@color/text_grey" />
+
+        <TextView
+            android:id="@+id/barcode_add_btn_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BARCODE"
+            android:textSize="8dp"
+            android:layout_centerInParent="true"
+            android:textColor="@color/white"
+            android:layout_below="@id/barcode_add_btn"
+            android:layout_marginBottom="5dp"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/manual_add_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/barcode_add_btn_text"
+            android:backgroundTint="@color/white"
+            android:src="@drawable/manual_add_icon"
+            android:visibility="visible"
+            android:layout_marginHorizontal="4dp"
+            android:layout_marginBottom="0dp"
+            app:borderWidth="0dp"
+            app:fabSize="mini"
+            app:tint="@color/text_grey" />
+
+        <TextView
+            android:id="@+id/manual_add_btn_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MANUAL"
+            android:textSize="8dp"
+            android:layout_centerInParent="true"
+            android:textColor="@color/white"
+            android:layout_below="@id/manual_add_btn"
+            android:layout_marginBottom="10dp"/>
+
+
+    </RelativeLayout>
+
+
+
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

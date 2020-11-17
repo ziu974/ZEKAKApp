@@ -1,6 +1,7 @@
 package com.example.zekak;
 
 public class Statistics {
+    // 이름 변경--> AWSstaistics? AWSNutrients?
 
     //Server: AWS, (class 이름: Statistics.java)
     // '모두먹음'카테고리 관리하기 위해(sqlite용량한계,장기적관점),

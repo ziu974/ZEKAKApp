@@ -82,7 +82,8 @@ public class AddItem extends AppMain {
 
     String name = null;
     String exp = null;
-    int portion = 0;
+    int portionText = 0;    // 디스플레이되는 실제 portion 설정값
+    int portion = -1;    // DB용 portion 설정값(format에 맞게): -1(설정안됨) / 1~10 --> 0~9로 변환되어 DB에 저장
     String category = null;
     String photo = null;
     String memo = null;
@@ -113,7 +114,8 @@ public class AddItem extends AppMain {
 
     // [Edit Items] 아이템 수정 목적으로 이 클래스 사용할 경우
     int editItemID = -1;
-    int previousUsage;
+    int previousPortion;    // portion 이전 설정값: 1~10
+    int previousUsage;      // 이전 사용값: n# 형태(n: previousPortion / #: used횟수)
     ImageView btnCancelEdit;
     TextView btnEditItem;
 
@@ -179,9 +181,10 @@ public class AddItem extends AppMain {
         btnSetPortion.setOnClickListener(onClickListener);
 
 
-        ///////// PART4: 카테고리 이름 목록 받아와서 어댑터에 연결, (AppMain이 제공)
+
+        ///////// PART4: 카테고리 이름 목록(categoryList) 받아와서 어댑터(AppMain이 제공)에 연결
         spinnerSetCategory.setAdapter(categoryAdapter);
-        spinnerSetCategory.setSelection(getIntent().getIntExtra("INITIAL_CATEGORY", 0));    // 사용자가 어떤 카테고리인 상태에서 아이템을 눌렀는지
+        spinnerSetCategory.setSelection(getIntent().getIntExtra("INITIAL_CATEGORY", 0));    // 사용자가 어떤 카테고리인 상태에서 아이템을 눌렀는지 (manual: AppMain / barcode: BarcodeScanningActivity에서)
         spinnerSetCategory.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -217,26 +220,30 @@ public class AddItem extends AppMain {
                 editItemID = getIntent().getIntExtra("ITEM_ID", 0);
                 Item editItem = ITEM_MAP.get(editItemID);
 
-                // 수정 전의 아이템 정보 값들 뷰에 매핑
+                ///// [수정 전의 아이템 정보 값들 뷰에 매핑]////
+
                 if(editItem.barcode != null){       // 수정하려는 아이템이 바코드 식재료인 경우
                     viewBarcode.setText(editItem.barcode);
                     viewProduct.setText(editItem.product);
                 }
+
                 // 사용량 무조건적인 초기화 방지를 위해 저장
                 previousUsage = editItem.portion;
-
+                previousPortion = previousUsage / 10 + 1; // 0~9의 환산되었던 값을 1~10로 되돌림
+                btnSetPortion.setText(Integer.toString(previousPortion));
+                portion = previousUsage;
 
                 //(CODE: 포토) 절대경로를 임시 파일과 연결 (CODE: 포토, 절대경로로 저장 안하기로, *.jpg로)
-                tempFile = new File(imagePath, editItem.photo);
-                try{
-                    setImage(false);
-                } catch (IOException e){}
+                if(editItem.photo != null){
+                    tempFile = new File(imagePath, editItem.photo);
+                    try{
+                        setImage(false);
+                    } catch (IOException e){}
+
+                }
 
                 editItemName.setText(editItem.name);
                 viewExp.setText(editItem.exp);
-
-                portion = editItem.portion / 10;
-                btnSetPortion.setText(Integer.toString(portion));
                 pinItem.setChecked(editItem.flag);
                 viewMemo.setText(editItem.memo);
                 break;
@@ -244,11 +251,6 @@ public class AddItem extends AppMain {
         }
 
 
-        // item category:  어래이 리스트 관련
-        // categoryList에 연결할 어댑터
-        spinnerSetCategory.setAdapter(categoryAdapter);     // TODO: 어댑터 정의(AppMain꺼 재탕) OR 아래의 arrayAdapter 쓸까
-        spinnerSetCategory.setSelection(0);
-        arrayAdapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, categoryList);
 
 
         // viewMemo: 스크롤과 관련
@@ -329,12 +331,11 @@ public class AddItem extends AppMain {
                     spinnerSetCategory.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         @Override
                         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                            category = categoryList.get(position);
+                            category = categoryList.get(position).toString();
                         }
 
                         @Override
                         public void onNothingSelected(AdapterView<?> parent) {
-                            // TODO: null로 할까 아니면 그냥 디폴트로 main에서 받아왔던 카테고리 써버릴까
                         }
                     });
                     break;
@@ -351,10 +352,9 @@ public class AddItem extends AppMain {
                     portionPicker.setMinValue(1);
                     portionPicker.setMaxValue(10);
                     portionPicker.setDescendantFocusability(NumberPicker.FOCUS_BEFORE_DESCENDANTS);
-                    //setDividerColor(portionPicker, android.R.color.white);
                     portionPicker.setWrapSelectorWheel(false);
-                    if(sessionId.equals("edit")) {
-                        portionPicker.setValue(portion);
+                    if(sessionId.equals("edit")) {      // 수정의 경우 원래 설정값 유지
+                        portionPicker.setValue(previousPortion);
                     }
                     portionPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
                         @Override
@@ -365,12 +365,14 @@ public class AddItem extends AppMain {
                     btnSetPortionCustom.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            if(sessionId.equals("edit") && (portionPicker.getValue() == previousUsage/10)) {
+                            portionText = portionPicker.getValue();
+                            if(sessionId.equals("edit") && (portionText == previousPortion)) {        // 지금까지 사용한 1회분 횟수 없어지는 거 방지하기 위해, 동일한 값이면 무효
                                 portion = previousUsage;
+                                Log.i("이전 포션 유지", String.valueOf(portion));
 
                             } else {
-                                btnSetPortion.setText(String.valueOf(portionPicker.getValue()));
-                                portion = portionPicker.getValue() * 10;                                            // [설명]: 사용량을 초기에 0으로 설정하기 위해, (i.e. #0 형태)
+                                btnSetPortion.setText(String.valueOf(portionText));
+                                portion = (portionText-1) * 10;                                       // [설명]: 사용량을 초기에 0으로 설정하기 위해, (i.e. (n-1)0 형태) + db 저장 format으로 변형
                             }
                             portionDialog.dismiss();
                         }
@@ -402,7 +404,7 @@ public class AddItem extends AppMain {
                     Item newItem;
 
                     // name, exp, portion이 null이 아니라면 데이터베이스에 insert() --> main화면으로 돌아감
-                    if(name.isEmpty() || exp.isEmpty() || portion==0){
+                    if(name.isEmpty() || exp.isEmpty() || portion==-1){
                         Toast.makeText(AddItem.this, "이름/유통기한/양 입력필수", Toast.LENGTH_SHORT).show();
                         break;
                     } else {
@@ -440,7 +442,7 @@ public class AddItem extends AppMain {
                     memo = viewMemo.getText().toString();
 
 
-                    if(name.isEmpty() || exp.isEmpty() || portion==0){
+                    if(name.isEmpty() || exp.isEmpty() || portion==-1){
                         Toast.makeText(AddItem.this, "이름/유통기한/양 입력필수", Toast.LENGTH_SHORT).show();
                         break;
                     } else {

@@ -57,6 +57,8 @@ public class InfoItem extends AppMain {
     int divided;
     int used;
 
+    boolean dbCheck = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,7 +82,6 @@ public class InfoItem extends AppMain {
         portion = (TextView) findViewById(R.id.text_item_portion);
         portionBar = (ProgressBar) findViewById(R.id.portion_bar);
         portionLabel = (TextView) findViewById(R.id.text_item_portion_bar);
-        memoView = (ScrollView) findViewById(R.id.scrollview_item_memo);     // TODO: 이거 쓸라나
         memo = (TextView) findViewById(R.id.item_memo);
 
         btnAllUsed = (Button) findViewById(R.id.all_used_btn);
@@ -89,8 +90,13 @@ public class InfoItem extends AppMain {
         btnCloseInfo = (TextView) findViewById(R.id.item_info_close_btn);
 
         initialUsage = itemInfo.portion;
-        divided = initialUsage / 10;   // 사용자 1회분 설정값
-        used = initialUsage - divided * 10; // 사용량
+
+
+
+        //[설명] ex. DB.portion:42 --> divided(1회분설정값):5 , used(사용횟수):2
+        ////    ==> 따라서 nn이면 1회분만 남은 상태(ex.44)
+        divided = initialUsage / 10 + 1;   // 사용자 1회분 설정값
+        used = initialUsage - ((divided-1) * 10); // 사용량
 
 
         // item name
@@ -114,7 +120,7 @@ public class InfoItem extends AppMain {
 
         // item portion bar
         portion.setText("남은 양\n(설정된 1회분: "+divided+")");
-        portionBar.setProgress(used/divided * 100);
+        portionBar.setProgress(33);
         portionLabel.setText(used+"/"+divided);
         // memo
 
@@ -138,36 +144,57 @@ public class InfoItem extends AppMain {
                     final Dialog askAllUse = new Dialog(InfoItem.this);
                     askAllUse.setContentView(R.layout.all_used_dialog);
                     TextView itemName1 = (TextView) askAllUse.findViewById(R.id.item_name_text);
-                    itemName1.setText(name.getText()+"을(를)");
                     Button allUsedBtn1 = (Button) askAllUse.findViewById(R.id.all_used_btn);
+                    Button portionUsedBtn = (Button) askAllUse.findViewById(R.id.use_portion_btn);
+                    ImageView cancelBtn2 = askAllUse.findViewById(R.id.cancel_btn);
+
+                    itemName1.setText(name.getText()+" 을(를)");
                     allUsedBtn1.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            //TODO: 모두 먹음 처리
-                            //
-                            returnIntent.putExtra("ITEM_USED", "all");
-                            setResult(RESULT_OK, returnIntent);
-                            askAllUse.dismiss();
-                            finish();
+                            dbCheck = itemsDB.statistics(itemID);           // 모두 먹은 아이템 영양성분 분석 처리 함수(해당 아이템은 삭제됨)
+                            if(!dbCheck){
+                                Toast.makeText(InfoItem.this, "모두먹음 처리 fail", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(InfoItem.this, "모두 먹음", Toast.LENGTH_SHORT).show();
+                                returnIntent.putExtra("ITEM_USED", "all");
+                                setResult(RESULT_OK, returnIntent);
+                                askAllUse.dismiss();
+                                finish();
+                            }
                         }
                     });
-                    if((divided - used) != 1){  // 1회분 사용 가능할 경우(모두먹음 처리 안되고)
-                        Button portionUsedBtn = (Button) askAllUse.findViewById(R.id.use_portion_btn);
+                    if((divided - used) != 1){  // 1회분만 남은 경우에는 1회분 사용 버튼 활성화 안됨(모두먹음 처리만 가능해짐)
                         portionUsedBtn.setVisibility(View.VISIBLE);
                         portionUsedBtn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {   // 사용량 저장하고, progress bar 업데이트
-                                used++;
-                                returnIntent.putExtra("ITEM_USED", "portion");
-                                setResult(RESULT_OK, returnIntent);
-                                portionBar.setProgress(used/divided * 100);
-                                portionLabel.setText(used+"/"+divided);
-                                itemsDB.usePortion(itemID, initialUsage++);
-                                //TODO: usePortion() 에러처리(false)
+                                dbCheck = itemsDB.usePortion(itemID, initialUsage++);       // 1회분 사용 처리 함수
+                                if(!dbCheck){
+                                    Toast.makeText(InfoItem.this, "1회분 사용 fail", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    used++;
+                                    portionBar.setProgress(used/divided * 100);
+                                    portionLabel.setText(used+"/"+divided);
+                                    returnIntent.putExtra("ITEM_USED", "portion");
+                                    setResult(RESULT_OK, returnIntent);
+                                }
                                 askAllUse.dismiss();
                             }
                         });
+                    } else {    // 1회분만 남은 경우
+                        portionUsedBtn.setText("(모두 먹음만 가능)");  // 1회분 사용 invalid 하다는 것을 표현하기 위해
+                        portionUsedBtn.setTextSize(10);
                     }
+
+                    cancelBtn2.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            askAllUse.dismiss();
+                        }
+                    });
+
+                    askAllUse.show();
                     break;
 
                 case R.id.edit_item_btn:        // edit item
@@ -185,12 +212,21 @@ public class InfoItem extends AppMain {
                     TextView itemName2 = (TextView) askAgain.findViewById(R.id.item_name_text);
                     Button allUsedBtn2 = (Button) askAgain.findViewById(R.id.all_used_btn);
                     Button deletePermanentBtn = (Button) askAgain.findViewById(R.id.item_delete_btn);
+                    ImageView cancelBtn = askAgain.findViewById(R.id.cancel_btn);
 
-                    itemName2.setText(name.getText()+"을(를)");
+                    itemName2.setText(name.getText()+" 을(를)");
                     allUsedBtn2.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            //TODO: 위에 있는 첫번째 case에서 하는 동작들 다이얼로그 제외하고 동일하게 -- 차라리 '모두먹음' 함수로 빼자
+                            dbCheck = itemsDB.statistics(itemID);           // 모두 먹은 아이템 영양성분 분석 처리 함수(해당 아이템은 삭제됨)
+                            if(!dbCheck){
+                                Toast.makeText(InfoItem.this, "모두먹음 처리 fail", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(InfoItem.this, "모두 먹음", Toast.LENGTH_SHORT).show();
+                                returnIntent.putExtra("ITEM_USED", "all");
+                                setResult(RESULT_OK, returnIntent);
+                                finish();
+                            }
                         }
                     });
                     deletePermanentBtn.setOnClickListener(new View.OnClickListener() {
@@ -209,6 +245,13 @@ public class InfoItem extends AppMain {
                             finish();
                         }
                     });
+                    cancelBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            askAgain.dismiss();
+                        }
+                    });
+                    askAgain.show();
                     break;
 
                 case R.id.item_info_close_btn:  // close info activity
@@ -235,21 +278,24 @@ public class InfoItem extends AppMain {
     public void calcRemainingDates(String exp) {
         try{
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd");
-            SimpleDateFormat resultFormat = new SimpleDateFormat("yyyy년 MM달 dd일 남음");
+            SimpleDateFormat resultFormat = new SimpleDateFormat("MM달 dd일 남음");
             final int oneDay = 24 * 60 * 60 * 1000;
 
-
+            Date present = new Date();
             Date expDate = dateFormat.parse(exp);
 
-            Calendar calendar = new GregorianCalendar();
-            long today = calendar.getTimeInMillis() / oneDay;
-            calendar.setTime(expDate);
-            long expire = calendar.getTimeInMillis() / oneDay;
+            Calendar now = Calendar.getInstance();
+            Calendar due = Calendar.getInstance();
+            now.setTime(present);
+            due.setTime(expDate);
 
-            Date remaining = new Date(expire - today);
+            long from = now.getTimeInMillis();
+            long expire = due.getTimeInMillis();
+            long remaining = (expire - from) / oneDay;
+            // format안됨(1970.01.01)String remain = resultFormat.format(remaining);
 
 
-            remainingDates.setText(resultFormat.format(remaining));
+            remainingDates.setText(String.valueOf(remaining)+" days left");
         }
         catch(ParseException e) {
             e.printStackTrace();

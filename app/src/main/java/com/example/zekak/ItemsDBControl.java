@@ -70,7 +70,6 @@ public class ItemsDBControl extends AppCompatActivity {
         }
         cursor = db.query(helper.TABLE_NAME, null, selection, selectionArgs, null, null, null);
         return cursor;
-        // TODO: but where---?     db.close();
     }
 
     public boolean edit(Item item, int itemID){
@@ -88,12 +87,9 @@ public class ItemsDBControl extends AppCompatActivity {
 
 
         if(db.update(helper.TABLE_NAME, values, whereClause, null)>0){
-            db.close();
             return true;
         } else{
-            db.close();
             return false;
-
         }
     }
 
@@ -104,10 +100,8 @@ public class ItemsDBControl extends AppCompatActivity {
         values.put(helper.PORTION, value);
 
         if(db.update(helper.TABLE_NAME, values, whereClause, null)>0){
-            db.close();
             return true;
         } else{
-            db.close();
             return false;
         }
     }
@@ -133,17 +127,28 @@ public class ItemsDBControl extends AppCompatActivity {
 
         whereClause = selection + "= ?";
         int itemsDeleted = db.delete(helper.TABLE_NAME, whereClause, selectionArgs);
-        db.close();
         return itemsDeleted;
     }
 
 
-//    public int statistics(String deleteType, String value) {
-//        // TODO: statistics.java에 적어놓음
-//        int itemsDeleted = db.delete(helper.TABLE_NAME, whereClause, selectionArgs);
-//        db.close();
-//        return itemsDeleted;
-//    }
+    public boolean statistics(int itemID) { // 모두 먹은 아이템 영양성분 분석 처리 함수
+        // TODO: statistics.java에 적어놓음
+        // TODO 0. this.select해서 itemID로 아이템 정보 가져옴
+        // TODO 1. aws 블라블라 처리--> 성공하면 2.
+        boolean awsCheck = true;       // TODO: 테스트를 위해 임시 --> 서버 추가되면 false로 초기화 바꾸기
+        // 2. 내부에서 삭제 (아래코드)
+        if(awsCheck){
+            String[] selectionArgs = {String.valueOf(itemID)};
+            int itemsDeleted = db.delete(helper.TABLE_NAME, "ID = ", selectionArgs);
+            if(itemsDeleted>0){
+                return true;
+            } else return false;
+        } else {
+            Log.i("통계부분", "Something went wrong with the server");
+            return false;
+        }
+
+    }
 
 
     // SQLite Close

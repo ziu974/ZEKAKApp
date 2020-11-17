@@ -24,14 +24,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:layout_marginTop="15dp" />
+        android:layout_marginTop="5dp"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="@string/all_used_ask"
-        android:textSize="16sp"/>
+        android:textSize="18sp"
+        android:textStyle="bold"/>
 
     <TextView
         android:id="@+id/item_dialog_text"
@@ -72,6 +75,7 @@
             android:textStyle="bold"
             app:backgroundTint="@color/light_grey" />
     </LinearLayout>
+
 
 
 </LinearLayout>

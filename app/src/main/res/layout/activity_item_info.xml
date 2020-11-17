@@ -173,6 +173,7 @@
                 android:text="메모"
                 android:textStyle="bold"
                 android:layout_marginRight="10dp"
+                android:layout_marginBottom="5dp"
                 android:textSize="12sp"/>
 
 
@@ -184,12 +185,16 @@
                 android:layout_below="@id/text_item_memo"
                 android:layout_marginBottom="15dp"
                 android:scrollbars="vertical"
-                android:scrollbarStyle="insideOverlay">
+                android:scrollbarStyle="insideOverlay"
+                android:background="#f1f1f1"
+                android:padding="10dp">
 
                 <TextView
                     android:id="@+id/item_memo"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"
+                    android:textSize="14sp"
+                    android:text="sldkfjslkfjsd"/>
 
             </ScrollView>
 

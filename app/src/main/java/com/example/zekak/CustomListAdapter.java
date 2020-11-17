@@ -46,7 +46,7 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Vi
     }
 
     public interface OnListItemLongSelectedInterface {
-        void onItemLongHold(int itemID, View v, int position);
+        void onItemLongHold(int itemID, View v, int position, int portion);
     }
 
     public interface OnListItemSwipedInterface {
@@ -86,14 +86,19 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Vi
             holder.iImageView.setImageBitmap(BitmapFactory.decodeFile(path));
 
             //Item.portion의 0# 같은 형태를 setProgress()에 적용
-            int divided = itemDisplay.get(position).portion / 10;   // 사용자 1회분 설정값
-            int used = itemDisplay.get(position).portion - divided * 10; // 사용량
+            //[설명] ex. DB.portion:42 --> divided(1회분설정값):5 , used(사용횟수):2
+            ////    ==> 따라서 nn이면 1회분만 남은 상태(ex.44)
+            holder.iPortion = itemDisplay.get(position).portion;
+            int divided = holder.iPortion / 10 + 1;   // 사용자 1회분 설정값(주의: 1더해서 실제 1~10값으로 처리)
+            int used =  holder.iPortion - ((divided-1) * 10); // 사용량
 
             holder.mItem = itemDisplay.get(position);
             ///////임시 holder.iImageView.setImageBitmap(originalBm);
             holder.iNameView.setText(itemDisplay.get(position).name);
             holder.iExpView.setText(itemDisplay.get(position).exp);
-            holder.iPortionView.setProgress(used/divided * 100);
+            //TODO FAKE
+            //holder.iPortionView.setProgress(used/divided * 100);
+            holder.iPortionView.setProgress(66);
             if(itemDisplay.get(position).flag){     // 핀 ON인 경우(default: OFF)
                 holder.iPinView.setVisibility(View.VISIBLE);
 
@@ -113,6 +118,7 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Vi
 
         public Item mItem;
         public int itemID;  // 각 아이템 탭에 대한 리스너 처리를 위한 식별 용도(Item.id 값), 이거 안하면 리사이클러 갱신 불가
+        public int iPortion;
         public boolean categoryFit; // 현재 카테고리에 속해 있는 아이템인지 구분하기 위해
 
         public ViewHolder(View singleTabVew) {      // 하나의 아이탭 탭 뷰 의미
@@ -135,7 +141,7 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Vi
             singleTabVew.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    holdListener.onItemLongHold(itemID, v, getAdapterPosition());
+                    holdListener.onItemLongHold(itemID, v, getAdapterPosition(), iPortion);
                     return false;
                 }
             });

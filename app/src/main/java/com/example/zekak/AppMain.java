@@ -7,8 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -20,9 +22,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ActionMenuView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,11 +57,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import com.example.zekak.ItemsDBControl;
-
-import org.w3c.dom.Text;
-
-public class AppMain extends AppCompatActivity implements CustomListAdapter.OnListItemSelectedInterface, CustomListAdapter.OnListItemLongSelectedInterface, CustomListAdapter.OnListItemSwipedInterface {
+public class AppMain<ActivityFabBinding> extends AppCompatActivity implements CustomListAdapter.OnListItemSelectedInterface, CustomListAdapter.OnListItemLongSelectedInterface, CustomListAdapter.OnListItemSwipedInterface {
     // Request Codes for intent 객체
     static final int BARCODE_ADD = 1;
     static final int MANUAL_ADD = 2;
@@ -82,7 +85,6 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
 
     // 11/10 Items 관련
     public CustomListAdapter customListAdapter;
-    boolean firstAttempt = false;
 
     // CODE 9009 (검색하면 됨, 그부분 고쳐)
     //TODO: ITEMS랑 겹쳐서 일단은 둘 다 쓰지만, 둘 중 하나 골라
@@ -104,6 +106,10 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
     // 각종 뷰( 일단은 다른 클래스에서 쓰이는 것들만 전역으로 선언)
     Spinner categoryChange;
     RecyclerView recyclerView;
+    ActionMenuView menuBtn;
+    private FloatingActionButton addFab, barcodeAddFab, manualAddFab;
+    TextView fabText1, fabText2;
+    boolean isRotate = false;
 
 
     // 교재 7장 p.6
@@ -125,11 +131,6 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
 
         // PART2: Prefs part (설정값: 카테고리 불러오기)
         load();      // 카테고리 목록 불러옴
-        /// TODO: 테스트용 카테고리, 지웡어ㅓ어ㅓㅇ
-        // 이런식으로 카테고리 추가하면 됨
-        save("test category");
-        /// 여기까지 테스트
-
         categoryAdapter = new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item, categoryList);
 
         // PART3: DB - 현재 카테고리로 ItemList 받아옴
@@ -143,14 +144,9 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
         customListAdapter.setHasStableIds(true);        // 리사이클러 어댑터의 뷰 홀더에게, 고정 id 있으니 새로 모든 것을 매핑하지 않아도 된다고 알림(카테고리 변경 시  깜빡임 방지)
 
 
-
-
         // PART1: layout part
         setContentView(R.layout.activity_main);
-        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
         CollapsingToolbarLayout toolBarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
-        //toolBarLayout.setTitle(getTitle());
 
         // 상단 바 버튼들의 이벤트 리스너 모아서 정의해둔 클래스
         BtnOnClickListener onClickListener = new BtnOnClickListener();
@@ -161,18 +157,15 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(customListAdapter);
 
-        ImageButton menuBtn = findViewById(R.id.menu_btn);
+        menuBtn = findViewById(R.id.menu_btn);
         menuBtn.setOnClickListener(onClickListener);
-
         TextView categoryItemCount = findViewById(R.id.item_count_display);
         categoryItemCount.setText(Integer.toString(COUNT));
-
-
         TextView buttooon = findViewById(R.id.category_change);
 
         categoryChange = findViewById(R.id.category_changeeeeeee);
         categoryChange.setAdapter(categoryAdapter);
-        categoryChange.setSelection(0);     // default: "CATEGORY(전체)' 카테고리
+        categoryChange.setSelection(categoryAdapter.getPosition("CATEGORY"));     // default: "CATEGORY(전체)' 카테고리, 11/17 '0'으로 하면 list의 순서가 add() 시 무작위이기 때문에 전체 카테고리로 안됨
         // 11.12 교재 p.301참고
         categoryChange.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -197,28 +190,42 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
             }
         });
 
-        FloatingActionButton addFab = (FloatingActionButton) findViewById(R.id.add_item_btn);
+        addFab = (FloatingActionButton) findViewById(R.id.add_item_btn);
         addFab.setOnClickListener(onClickListener);
 
         // addFab 버튼 inflate 되었을 떄의 버튼들
-        ImageButton cancelAddBtn = (ImageButton) findViewById(R.id.cancel_add_btn);
-        cancelAddBtn.setOnClickListener(onClickListener);
-        ImageButton barcodeAddBtn = (ImageButton) findViewById(R.id.barcode_add_btn);
-        barcodeAddBtn.setOnClickListener(onClickListener);
-        ImageButton manualAddBtn = (ImageButton) findViewById(R.id.manual_add_btn);
-        manualAddBtn.setOnClickListener(onClickListener);
+        barcodeAddFab = (FloatingActionButton) findViewById(R.id.barcode_add_btn);
+        barcodeAddFab.setOnClickListener(onClickListener);
+        manualAddFab = (FloatingActionButton) findViewById(R.id.manual_add_btn);
+        manualAddFab.setOnClickListener(onClickListener);
+        fabText1 = (TextView) findViewById(R.id.barcode_add_btn_text);
+        fabText2 = (TextView) findViewById(R.id.manual_add_btn_text);
+        ViewAnimation.init(barcodeAddFab);  // 처음 앱 실행시 fab 두개 숨김
+        ViewAnimation.init(manualAddFab);
+        ViewAnimation.init(fabText1);
+        ViewAnimation.init(fabText2);
+        //TODO 이 부분이랑 xml 파일 삭제하기(안씀)
 
 
+        //11.17 data binding 방식 도전: gradle 설정 -> 타겟 xml과 연결
+        //bi = DataBindingUtil.setContentView(this, R.layout.activity_main);
+
+
+        /// TODO: 테스트용 카테고리, 지웡어ㅓ어ㅓㅇ
+        // 이런식으로 카테고리 추가하면 됨
+        save("test category");
+        save("test category2");
+        save("test category3");
+        /// 여기까지 테스트
 
     }
 
-    // 설정값 불러오는 함수
+    // 설정값 불러오는 함수, 처음에만 호출(안그러면 categoryList 중복되어 저장됨)
     private ArrayList<String> load() {
         appData = getSharedPreferences(PREFS_NAME, Activity.MODE_PRIVATE);
         Set<String> set = appData.getStringSet(PREFS_NAME, null);
         if(set == null){        // 전체 카테고리 없을 때 대비(App 첫 실행)
             save("CATEGORY");
-            load();         // '전체' 카테고리 추가하고 다시 load 호출
         } else
             categoryList.addAll(set);
 
@@ -269,7 +276,6 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
 
     @Override
     public void onItemSelected(int itemID, View v, int position) {
-        // TODO: ItemInfo로 intent
         Toast.makeText(this, "Single Click on position:"+position,
                 Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(AppMain.this, InfoItem.class);
@@ -278,10 +284,19 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
     }
 
     @Override
-    public void onItemLongHold(int itemID, View v, int position) {
-        // TODO: 1회분 사용
-        Toast.makeText(this, "Hold on position:"+position,
-                Toast.LENGTH_SHORT).show();
+    public void onItemLongHold(int itemID, View v, int position, int portion) {
+        Toast.makeText(this, "Hold on position:" + position, Toast.LENGTH_SHORT).show();
+        if(portion / 10 == portion - (portion / 10)) {  // 여기 1회분 사용에서는 메모리 절약을 위해서 바로 계산
+            portion++;
+            boolean dbCheck = itemsDB.usePortion(itemID, portion);       // 1회분 사용 처리 함수
+            if (!dbCheck) {
+                Toast.makeText(this, "1회분 사용 fail", Toast.LENGTH_SHORT).show();
+            } else {
+                //TODO
+                //progressBar.setProgress(used / divided * 100);
+                // TODO: refresh recycler view
+            }
+        }
     }
 
     @Override
@@ -382,25 +397,33 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
             Intent intent = null;
             switch (view.getId()){
                 case R.id.menu_btn:
+                    //getMenuInflater().inflate(R.menu.menu_scrolling, menuBtn);
+                    intent = new Intent(AppMain.this, Menu.class);
+                    // TODO: (edit below) 현재 페이지의 카테고리 이름, 아이템 추가시 자동으로 입력되게
+                    intent.putExtra("INITIAL_CATEGORY", categoryChange.getSelectedItemPosition());
+                    //startActivityForResult(intent, MENU_ADD);
                     break;
 
 
                 case R.id.add_item_btn:
-                    // <펼쳐지는 부분 구현>!!!
-                    //
-                    //
-                    //TODO  :임시 코드 , test 해볼라고
-                    intent = new Intent(AppMain.this, AddItem.class);
-                    intent.putExtra("INITIAL_CATEGORY", categoryList.indexOf(currentCategory)-1);
-                    intent.putExtra("EXTRA_SESSION_ID", "manual");
-                    startActivityForResult(intent, MANUAL_ADD);
+                    isRotate = ViewAnimation.rotateFab(view, !isRotate);
+                    if(isRotate) {  // X 모양일 때: fab 닫음
+                        ViewAnimation.showIn(barcodeAddFab);
+                        ViewAnimation.showIn(manualAddFab);
+                        ViewAnimation.showIn(fabText1);
+                        ViewAnimation.showIn(fabText2);
+                    } else {        // + 모양일 때: fab 펼침
+                        ViewAnimation.showOut(barcodeAddFab);
+                        ViewAnimation.showOut(manualAddFab);
+                        ViewAnimation.showOut(fabText1);
+                        ViewAnimation.showOut(fabText2);
+                    }
                     break;
 
-                    // 버튼 3개 생성, 이 리스너 연결(안에서 자기가 자기 참조가 가능한가..?)
+
+                    // 버튼 3개 생성, 이 리스너 연결(안에서 자기가 자기 참조가 가능한가..?) yes11.16
 
                     //
-                case R.id.cancel_add_btn:
-                    break;
                 case R.id.barcode_add_btn:
                     getCameraPermission();          // 혹시 모를 오류 방지를 위해.. 카메라 권한 체크
                     // 이제 여기에서 BarcodeScanningActivity 실행 후
@@ -415,6 +438,7 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
                 case R.id.manual_add_btn:
                     // 이제 여기에서 인텐트--> AddItem으로 넘어가기
                     intent = new Intent(AppMain.this, AddItem.class);
+                    //intent.putExtra("INITIAL_CATEGORY", categoryList.indexOf(currentCategory)-1);
                     // TODO: 이거 categoryList.indexOf(itemInfo.category)로 위에 test처럼 바꿀까
                     intent.putExtra("INITIAL_CATEGORY", categoryChange.getSelectedItemPosition());
                     intent.putExtra("EXTRA_SESSION_ID", "manual");
@@ -454,25 +478,26 @@ public class AppMain extends AppCompatActivity implements CustomListAdapter.OnLi
             }
         }
 
+        // TODO
         // InfoItem.java
-//        if(requestCode == ITEM_INFO) {
-//            임시 clickedItemId;
-//            if(resultCode == RESULT_OK) {       // 데이터베이스에서 삭제
-//                // TODO: 그 아이템을 ITEMS 리스트에서 삭제
-//                삭제할 아이템 아이디: data.getIntExtra("DELETED_ITEM_ID", 0);
-//                ㅣㅇ건 또 뭐야 refreshItemList();
-//
-//                switch(data.getStringExtra("ITEM_USED")){
-//                    case "all":         // 모두 먹음
-//
-//                        break;
-//                    case "portion":     // 1회분 먹음, 단순 업데이트
-//                        ITEM_MAP.get(clickedItemId).portion =
-//                        break;
-//                }
-//            } else {
-//            }
-//        }
+        if(requestCode == ITEM_INFO) {
+            //임시 clickedItemId;
+            if(resultCode == RESULT_OK) {       // 데이터베이스에서 삭제
+                // TODO: 그 아이템을 ITEMS 리스트에서 삭제
+                //삭제할 아이템 아이디: data.getIntExtra("DELETED_ITEM_ID", 0);
+                //ㅣㅇ건 또 뭐야 refreshItemList();
+
+                switch(data.getStringExtra("ITEM_USED")){
+                    case "all":         // 모두 먹음
+
+                        break;
+                    case "portion":     // 1회분 먹음, 단순 업데이트
+                        //ITEM_MAP.get(clickedItemId).portion =
+                        break;
+                }
+            } else {
+            }
+        }
     }
 
 

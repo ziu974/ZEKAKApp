@@ -16,65 +16,33 @@
 
 package com.example.zekak;
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.hardware.camera2.*;
-import android.media.Image;
-import android.net.TrafficStats;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-
-// 1. Google Vision API imports
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.vision.CameraSource;
-import com.google.mlkit.vision.barcode.Barcode;
-import com.google.mlkit.vision.barcode.BarcodeScanner;
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
-import com.google.mlkit.vision.barcode.BarcodeScanning;
-import com.google.mlkit.vision.common.InputImage;
+import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 
-// 2. ZXING API imports
-import com.google.zxing.integration.android.IntentIntegrator;
-import com.journeyapps.barcodescanner.CaptureActivity;
-import com.journeyapps.barcodescanner.CaptureManager;
-import com.journeyapps.barcodescanner.DecoratedBarcodeView;
-
+// 1. ZXING API imports
 import com.google.zxing.BarcodeFormat;
-import com.google.zxing.ResultPoint;
 import com.google.zxing.client.android.BeepManager;
 import com.journeyapps.barcodescanner.BarcodeCallback;
 import com.journeyapps.barcodescanner.BarcodeResult;
+import com.journeyapps.barcodescanner.CaptureActivity;
+import com.journeyapps.barcodescanner.CaptureManager;
 import com.journeyapps.barcodescanner.DecoratedBarcodeView;
 import com.journeyapps.barcodescanner.DefaultDecoderFactory;
 
-
-import java.io.IOException;
-
-
 // 2. Food Product Barcode API imports
-import android.os.StrictMode;
-import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.Toast;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
+
 
 
 public class BarcodeScanningActivity extends CaptureActivity {
@@ -89,7 +57,7 @@ public class BarcodeScanningActivity extends CaptureActivity {
     String POG_DAYCNT = null;   // Product's expire date information
     String StatusCODE = null;
 
-    String category = null;
+    int category = 0;
 
 
 
@@ -98,6 +66,10 @@ public class BarcodeScanningActivity extends CaptureActivity {
     private CaptureManager captureManager;
     private BeepManager beepManager;
     private String lastText;    // 바코드 중복 인식을 막기 위해
+
+
+    Intent intent = null;
+    Intent returnIntent = null;
 
     private BarcodeCallback callback = new BarcodeCallback() {
         @Override
@@ -110,24 +82,31 @@ public class BarcodeScanningActivity extends CaptureActivity {
             lastText = result.getText();
             barcodeScannerView.setStatusText(result.getText());
             beepManager.playBeepSound();
-
             barcodeScannerView.pauseAndWait();
+
 
             // [핵심] 인식된 아이템의 바코드 저장
             barcodeValue = result.getText();
             Log.i("바코드 번호", barcodeValue);
 
 
-            StatusCODE = searchProduct(barcodeValue);     // 혹시 몰라서 전역변수이지만 또 저장
-            if(!StatusCODE.isEmpty())
-                setStatus();
+            // [중요] Android 4.0 이상 부터는 네트워크를 이용할 때 반드시 Thread 사용해야 함
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    StatusCODE = searchProduct(barcodeValue);           //아래 메소드를 호출하여 XML data를 파싱해서 String 객체로 얻어오기
+                    Log.i("공공API 스레드 값",  StatusCODE);
+                    if(!StatusCODE.equals("attempt")) {       // 결과값을 intent에 담아 AddItem로 intent
+                        setStatus(StatusCODE);
+                    }
+                }
+            }).start();
+
+            Log.i("메인 스레드 값",  StatusCODE);
         }
     };
 
 
-
-    Intent intent = null;
-    Intent returnIntent = null;
 
 
     @Override
@@ -135,9 +114,9 @@ public class BarcodeScanningActivity extends CaptureActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_barcode_scan);
 
+        StatusCODE = "attempt";     // nullpointError 방지하기 위해(searchProduct() 실행전이라는 의미)
 
-        category = getIntent().getStringExtra("INITIAL_CATEGORY");
-
+        category = getIntent().getIntExtra("INITIAL_CATEGORY", 0);
 
         /////zxing
         // 바코드 스캔 시작(카메라)
@@ -153,69 +132,82 @@ public class BarcodeScanningActivity extends CaptureActivity {
 
     }
 
+
     private String searchProduct(String barcodeValue) {
-        TrafficStats.setThreadStatsTag((int) Thread.currentThread().getId());
+        StringBuffer buffer = new StringBuffer();
+        String queryUrl = "http://openapi.foodsafetykorea.go.kr/api/6a8b4f6ef9c24654bd86/C005/xml/1/1000/BAR_CD=" + barcodeValue;       // TODO: 여기 1000건에 없으면 어떡할건데
+
+        //https://recipes4dev.tistory.com/134 참고
+        XmlPullParserFactory parserCreator;
+        XmlPullParser xmlParser;
+
+
         try {
             // 바코드연계제품정보 API: URL, query
-            URL url = new URL("http://openapi.foodsafetykorea.go.kr/api/6a8b4f6ef9c24654bd86/C005/xml/1/100466/BAR_CD=" + barcodeValue);
+            URL url = new URL(queryUrl);    // URL 객체
+            InputStream inputStream = url.openStream();     // URL 위치로 입력스트림 연결
 
-            XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
-            XmlPullParser parser = parserCreator.newPullParser();
+            parserCreator = XmlPullParserFactory.newInstance();
+            xmlParser = parserCreator.newPullParser();
+            xmlParser.setInput(new InputStreamReader(inputStream));        // inputstream으로부터 xml 입력받기
 
-            parser.setInput(url.openStream(), null);
-
-            int parserEvent = parser.getEventType();
-            Log.i("상태","===Start Parsing...===");
+            xmlParser.next();       // START_DOCUMENT 다음으로 가기 위해
+            int parserEvent = xmlParser.getEventType();
+            Log.i("searchProduct()","===Start Parsing...===");
 
             while (parserEvent != XmlPullParser.END_DOCUMENT) {
                 switch (parserEvent) {
-                    case XmlPullParser.START_TAG://parser가 시작 태그를 만나면 실행
-                        if (parser.getName().equals("CODE")) { // Status Code of API response msg
+                    case XmlPullParser.START_TAG:     //parser가 <시작 태그>를 만나면 실행, 그 내용을 받을 수 있게 in** = true;
+                        if (xmlParser.getName().equals("CODE")) { // Status Code of API response msg
+                            Log.i("<CODE>", "in");
                             inStatusCode = true;
                         }
                         // just in case
-                        if (parser.getName().equals("BAR_CD")) { //title 만나면 내용을 받을수 있게 하자
+                        if (xmlParser.getName().equals("BAR_CD")) { // barcode value (이미 알고 있지만)
+                            Log.i("<BAR_CD>", "바코드");
                             inBAR_CD = true;
                         }
-                        if (parser.getName().equals("PRDLST_NM")) { //address 만나면 내용을 받을수 있게 하자
+                        if (xmlParser.getName().equals("PRDLST_NM")) { // product name
+                            Log.i("<PRDLST_NM>", "제품명");
                             inPRDLST_NM = true;
                         }
-                        if (parser.getName().equals("POG_DAYCNT")) { //mapx 만나면 내용을 받을수 있게 하자
+                        if (xmlParser.getName().equals("POG_DAYCNT")) { // expire date
+                            Log.i("<POG_DAYCNT>", "유통기한");
                             inPOG_DAYCNT = true;
                         }
 
                         break;
 
-                    case XmlPullParser.TEXT://parser가 내용에 접근했을때
-                        if (inStatusCode) { // Status code of Response msg
-                            StatusCODE = parser.getText();
+                    case XmlPullParser.TEXT:            //parser가 내용에 접근했을때
+                        if (inStatusCode) {             // Status code of Response msg
+                            StatusCODE = xmlParser.getText();
                             inStatusCode = false;
 
                             switch (StatusCODE) {
-                                case "INFO-000":        // 정상처리 되었습니다.
-                                    System.out.println("Matching Product Found");
+                                case "INFO-000":        // "정상처리 되었습니다."
+                                    Log.i("API","Matching Product Found");
                                     break;
-                                case "INFO-200":        // 해당하는 데이터가 없습니다.
-                                    System.out.println("No matching Product, Add Manually");
+                                case "INFO-200":        // "해당하는 데이터가 없습니다."
+                                    Log.i("API","No matching Product, Add Manually");
                                     break;
-                                case "INFO-300":        // 유효 호출건수를 이미 초과하셨습니다.
-                                    System.out.println("Used all provided requests(500)");
+                                case "INFO-300":        // "유효 호출건수를 이미 초과하셨습니다."
+                                    Log.i("API","Used all provided requests(500)");
                                     break;
                                 default:
-                                    System.out.println("Status something else");
+                                    Log.i("Status something else",StatusCODE);
                                     break;
                             }
                         }
                         if (inBAR_CD) { // Requested Barcode value save it into another variable, just in case
-                            BAR_CD = parser.getText();
+                            BAR_CD = xmlParser.getText();
                             inBAR_CD = false;
                         }
                         if (inPRDLST_NM) { // Product name with the matching barcode no.
-                            PRDLST_NM = parser.getText();
+                            PRDLST_NM = xmlParser.getText();
                             inPRDLST_NM = false;
                         }
                         if (inPOG_DAYCNT) { // Product's expire date information
-                            POG_DAYCNT = parser.getText();
+                            POG_DAYCNT = xmlParser.getText();
                             inPOG_DAYCNT = false;
                         }
                         break;
@@ -226,20 +218,22 @@ public class BarcodeScanningActivity extends CaptureActivity {
                         }
                         break;
                 }
-                parserEvent = parser.next();
+                parserEvent = xmlParser.next();         // 다음 태그로 파싱 진행(안하면 무한루프겠죠?)
             }
+            Log.i("End of XML document(식품안전나라)", "returning search results..");
         } catch (Exception e) {
+            e.printStackTrace();
             StatusCODE = "ERROR";
-            System.out.println("ERROR with barcode scanning Activity");
-            //status1.setText("에러가..났습니다...");
+            Log.i("바코드 클래스","ERROR with barcode scanning Activity");
         }
 
         return StatusCODE;
     }
 
-    private void setStatus() {
+    private void setStatus(String StatusCODE) {     // 이름은 같지만 추가스레드에서 온 값임
         switch (StatusCODE) {
             case "INFO-000":        // 정상처리 되었습니다.
+                Log.i("API Search result", PRDLST_NM);
                 intent = new Intent(BarcodeScanningActivity.this, AddItem.class);
                 intent.putExtra("EXTRA_SESSION_ID", StatusCODE);
                 intent.putExtra("barcodeValue", BAR_CD);
@@ -247,9 +241,14 @@ public class BarcodeScanningActivity extends CaptureActivity {
                 intent.putExtra("productExp", POG_DAYCNT);
                 break;
             case "INFO-200":        // 해당하는 데이터가 없습니다.
-                // TODO: 찾는 바코드 없다는 다이얼로그 띄움
-                Toast.makeText(this, "No such product :(", Toast.LENGTH_SHORT).show();
-                //
+                // 찾는 바코드 없다는 메세지 띄움
+                //Toast.makeText(this, "No such product :(", Toast.LENGTH_LONG).show();       // 아 맞다 스레드에서는 뷰 변경 불가
+                runOnUiThread(new Runnable(){
+                    @Override
+                    public void run(){
+                        Toast.makeText(BarcodeScanningActivity.this, "No such product :(", Toast.LENGTH_LONG).show();
+                    }
+                });
                 intent = new Intent(BarcodeScanningActivity.this, AddItem.class);
                 intent.putExtra("EXTRA_SESSION_ID", StatusCODE);
                 intent.putExtra("INITIAL_CATEGORY", category);
@@ -263,17 +262,18 @@ public class BarcodeScanningActivity extends CaptureActivity {
                 Log.e("BarcodeScanningActivity:", "ERROR with resultCode");
                 setResult(RESULT_CANCELED, returnIntent);
                 finish();
+                break;
         }
 
         if (intent != null) {         // AddItem. 으로 화면 넘어감
-            startActivity(intent);
+            onDestroy();
             finish();
+            startActivity(intent);
         }
     }
 
 
     ///// 결국 Zxing
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -308,3 +308,19 @@ public class BarcodeScanningActivity extends CaptureActivity {
     }
 
 }
+
+    // [복사본] 나중에 쓸 수도 있을 것 같아서
+//    new Thread(new Runnable(){
+//        @Override
+//        public void run(){
+//            StatusCODE=searchProduct(barcodeValue);           //아래 메소드를 호출하여 XML data를 파싱해서 String 객체로 얻어오기
+//
+//            // TODO 이말 중요!! ui 스레드 부분
+//            UI Thread(Main Thread)를 제외한 어떤 Thread도 화면을 변경할 수 없기때문에
+//            runOnUiThread()를 이용하여 UI Thread가 TextView 글씨 변경하도록 함
+//            runOnUiThread(new Runnable(){
+//                @Override
+//                public void run(){
+//                }
+//         });
+//    }).start();
