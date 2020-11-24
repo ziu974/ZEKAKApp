@@ -9,7 +9,7 @@ import android.view.View;
 //https://medium.com/better-programming/animated-fab-button-with-more-options-2dcf7118fff6 참고
 public class ViewAnimation {
     public static boolean rotateFab(final View v, boolean rotate) {
-        v.animate().setDuration(1000)
+        v.animate().setDuration(300)
                 .setListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
@@ -27,7 +27,7 @@ public class ViewAnimation {
         v.setAlpha(0f);
         v.setTranslationY(v.getHeight());
         v.animate()
-                .setDuration(1000)
+                .setDuration(300)
                 .translationY(0)
                 .setListener(new AnimatorListenerAdapter() {
                     @Override
@@ -43,7 +43,7 @@ public class ViewAnimation {
         v.setAlpha(1f);
         v.setTranslationY(0);
         v.animate()
-                .setDuration(1000)
+                .setDuration(300)
                 .translationY(v.getHeight())
                 .setListener(new AnimatorListenerAdapter() {
                     @Override

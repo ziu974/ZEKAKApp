@@ -113,14 +113,13 @@ public class AddItem extends AppMain {
 
 
     // [Edit Items] 아이템 수정 목적으로 이 클래스 사용할 경우
+    int position;   // 메인화면에서의 tab index
     int editItemID = -1;
     int previousPortion;    // portion 이전 설정값: 1~10
     int previousUsage;      // 이전 사용값: n# 형태(n: previousPortion / #: used횟수)
     ImageView btnCancelEdit;
     TextView btnEditItem;
 
-    //ArrayList<String> categoryList = new ArrayList<>();
-    ArrayAdapter<String> arrayAdapter;
 
 
 
@@ -189,6 +188,7 @@ public class AddItem extends AppMain {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 category = spinnerSetCategory.getSelectedItem().toString();
+                Log.i("카테고리", category);
             }
 
             @Override
@@ -218,6 +218,7 @@ public class AddItem extends AppMain {
                 break;
             case "edit":
                 editItemID = getIntent().getIntExtra("ITEM_ID", 0);
+                position = getIntent().getIntExtra("TAB_POSITION", -1);
                 Item editItem = ITEM_MAP.get(editItemID);
 
                 ///// [수정 전의 아이템 정보 값들 뷰에 매핑]////
@@ -453,6 +454,7 @@ public class AddItem extends AppMain {
                     if(dbCheck){        // item edit successful
                         Intent intent = new Intent(AddItem.this, InfoItem.class);
                         intent.putExtra("ITEM_ID", editItemID);
+                        intent.putExtra("TAB_POSITION", position);      // TODO intent하는 클래스에서 준 값이니까 이미 알고 있나...
                         startActivity(intent);
                         setResult(ITEM_EDITED);
                         finish();

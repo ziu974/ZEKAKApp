@@ -32,6 +32,7 @@ import java.util.GregorianCalendar;
 
 public class InfoItem extends AppMain {
     int itemID;
+    int position;
     Item itemInfo;
 
     TextView name;
@@ -56,6 +57,7 @@ public class InfoItem extends AppMain {
     int initialUsage;       // 처음 아이템 사용량
     int divided;
     int used;
+    int percentage;
 
     boolean dbCheck = false;
 
@@ -67,6 +69,7 @@ public class InfoItem extends AppMain {
         // PART1: 어디에서 왔는지
         // intent 엑스트라로 id 값 넘갸줄거라서 해시맵에서 이 아이디값 가지고 탐색 진행해야함
         itemID = getIntent().getIntExtra("ITEM_ID", 0);
+        position = getIntent().getIntExtra("TAB_POSTION", -1);
 
         // PART2: 해시맵 탐색해서 아이템 정보 가져옴
         itemInfo = ITEM_MAP.get(itemID);
@@ -97,6 +100,7 @@ public class InfoItem extends AppMain {
         ////    ==> 따라서 nn이면 1회분만 남은 상태(ex.44)
         divided = initialUsage / 10 + 1;   // 사용자 1회분 설정값
         used = initialUsage - ((divided-1) * 10); // 사용량
+        percentage = used / divided * 100;
 
 
         // item name
@@ -120,7 +124,7 @@ public class InfoItem extends AppMain {
 
         // item portion bar
         portion.setText("남은 양\n(설정된 1회분: "+divided+")");
-        portionBar.setProgress(33);
+        portionBar.setProgress(percentage);
         portionLabel.setText(used+"/"+divided);
         // memo
 
@@ -170,11 +174,13 @@ public class InfoItem extends AppMain {
                             @Override
                             public void onClick(View v) {   // 사용량 저장하고, progress bar 업데이트
                                 dbCheck = itemsDB.usePortion(itemID, initialUsage++);       // 1회분 사용 처리 함수
-                                if(!dbCheck){
+                                if(!dbCheck) {
                                     Toast.makeText(InfoItem.this, "1회분 사용 fail", Toast.LENGTH_SHORT).show();
                                 } else {
+                                    // memo
                                     used++;
-                                    portionBar.setProgress(used/divided * 100);
+                                    percentage = 100 * used / divided;
+                                    portionBar.incrementProgressBy(percentage);
                                     portionLabel.setText(used+"/"+divided);
                                     returnIntent.putExtra("ITEM_USED", "portion");
                                     setResult(RESULT_OK, returnIntent);
@@ -202,6 +208,7 @@ public class InfoItem extends AppMain {
                     intent.putExtra("EXTRA_SESSION_ID", "edit");
                     intent.putExtra("ITEM_ID", itemID);
                     intent.putExtra("INITIAL_CATEGORY", categoryList.indexOf(itemInfo.category));
+                    intent.putExtra("TAB_POSITION", position);
 
                     startActivityForResult(intent, EDIT_ITEM);
                     break;
@@ -223,8 +230,9 @@ public class InfoItem extends AppMain {
                                 Toast.makeText(InfoItem.this, "모두먹음 처리 fail", Toast.LENGTH_SHORT).show();
                             } else {
                                 Toast.makeText(InfoItem.this, "모두 먹음", Toast.LENGTH_SHORT).show();
-                                returnIntent.putExtra("ITEM_USED", "all");
-                                setResult(RESULT_OK, returnIntent);
+                                returnIntent.putExtra("ITEM_ID", itemID);
+                                returnIntent.putExtra("TAB_POSITION", position);
+                                setResult(ITEM_USED, returnIntent);
                                 finish();
                             }
                         }
@@ -240,8 +248,9 @@ public class InfoItem extends AppMain {
                                 Toast.makeText(InfoItem.this, "Error deleting", Toast.LENGTH_SHORT).show();
                             }
                             askAgain.dismiss();
-                            returnIntent.putExtra("DELETED_ITEM_ID", itemID);
-                            setResult(RESULT_OK, returnIntent);
+                            returnIntent.putExtra("ITEM_ID", itemID);
+                            returnIntent.putExtra("TAB_POSITION", position);
+                            setResult(ITEM_DELETED, returnIntent);
                             finish();
                         }
                     });
@@ -262,14 +271,17 @@ public class InfoItem extends AppMain {
 
             }
         }
-    }
+}
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if(requestCode == EDIT_ITEM){
+            Intent returnIntent = null;
+            returnIntent.putExtra("TAB_POSITION", position);
             if(resultCode == RESULT_OK){        // 아이템 수정이 되었으면 새로운 액티비티가 켜질 것이므로 이 창은 닫음
+                setResult(ITEM_EDITED, returnIntent);
                 finish();
             }
         }
@@ -278,7 +290,7 @@ public class InfoItem extends AppMain {
     public void calcRemainingDates(String exp) {
         try{
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd");
-            SimpleDateFormat resultFormat = new SimpleDateFormat("MM달 dd일 남음");
+            //SimpleDateFormat resultFormat = new SimpleDateFormat("MM달 dd일 남음");
             final int oneDay = 24 * 60 * 60 * 1000;
 
             Date present = new Date();

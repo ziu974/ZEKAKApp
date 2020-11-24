@@ -62,9 +62,12 @@ public class AppMain<ActivityFabBinding> extends AppCompatActivity implements Cu
     static final int BARCODE_ADD = 1;
     static final int MANUAL_ADD = 2;
     static final int ITEM_INFO = 3;
+   // static final int
 
     public static final int ITEM_ADDED = RESULT_FIRST_USER;  // 아이텝 추가 시 데이터베이스까지 입력이 잘 된 경우
     public static final int ITEM_EDITED = RESULT_FIRST_USER+1;  // 아이템 수정 시 "
+    public static final int ITEM_DELETED = RESULT_FIRST_USER+2;
+    public static final int ITEM_USED = RESULT_FIRST_USER+3;
 
     //11.07 앱 설정값 저장
     public static final String PREFS_NAME = "categories";
@@ -280,6 +283,7 @@ public class AppMain<ActivityFabBinding> extends AppCompatActivity implements Cu
                 Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(AppMain.this, InfoItem.class);
         intent.putExtra("ITEM_ID", itemID);
+        intent.putExtra("TAB_POSITION", position);
         startActivityForResult(intent, ITEM_INFO);
     }
 
@@ -306,90 +310,7 @@ public class AppMain<ActivityFabBinding> extends AppCompatActivity implements Cu
                 Toast.LENGTH_SHORT).show();
     }
 
-    // 11/10 아이템 구조체 정의
-    // TODO: 이거 별도의 클래스로 빼기 (너무 길어 ㅜㅜ & 아이템 관리 불편)
-    public static class Item implements Parcelable {    // intent의 extra에 이 구조체를 주고받기 위해 Parcelable
-        public final int id;
-        public final String name;
-        public final String product;
-        public final String barcode;
-        public final String exp;
-        public final int portion;
-        public final String category;
-        public final String photo;
-        public final String memo;
-        public final boolean flag;
 
-        public Item(int id, String name, String product, String barcode, String exp, int portion, String category, String photo, String memo, boolean flag) {
-            this.id = id;
-            this.name = name;
-            this.product = product;
-            this.barcode = barcode;
-            this.exp = exp;
-            this.portion = portion;
-            this.category = category;
-            this.photo = photo;
-            this.memo = memo;
-            this.flag = flag;
-        }
-
-        // intent로 넘어온 Item 객체를 처리할 때 사용
-        public Item(Parcel src){
-            id = src.readInt();
-            name = src.readString();
-            product = src.readString();
-            barcode  = src.readString();
-            exp = src.readString();
-            portion = src.readInt();
-            category = src.readString();
-            photo = src.readString();
-            memo = src.readString();
-            if(Build.VERSION.SDK_INT >= 29)
-                flag = src.readBoolean();
-            else {
-                flag = (boolean) (src.readByte() == 1);  // readBoolean 버전 문제: boolean으로 다시 변환
-            }
-        }
-
-
-        // Parcelable 구조체에 기록하는 함수 (주의: 순서 같아야 함)
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeInt(this.id);
-            dest.writeString(this.name);
-            dest.writeString(this.product);
-            dest.writeString(this.barcode);
-            dest.writeString(this.exp);
-            dest.writeInt(this.portion);
-            dest.writeString(this.category);
-            dest.writeString(this.photo);
-            dest.writeString(this.memo);
-            if(Build.VERSION.SDK_INT >= 29)
-                    dest.writeBoolean(this.flag);
-            else {
-                dest.writeByte((byte)(this.flag ? 1 : 0));  // writeBoolean 버전 문제: byte로 변환
-            }
-        }
-
-        // Parcelable을 생성하는 코드: 'CREATOR' (필수)
-        public static final Parcelable.Creator<Item> CREATOR = new Parcelable.Creator<Item>(){
-            @Override
-            public Item createFromParcel(Parcel in) {
-                return new Item(in);
-            }
-
-            @Override
-            public Item[] newArray(int size) {
-                return new Item[size];
-            }
-        };
-
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-    }
 
     class BtnOnClickListener implements View.OnClickListener {
         @Override
@@ -450,55 +371,71 @@ public class AppMain<ActivityFabBinding> extends AppCompatActivity implements Cu
     }
 // TODO : 임시
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {       // 각 클래스에서 db 처리까지 해줬으니, 여기에선 1.categoryItemList<>, 2. recyclerView adapter 갱신
         super.onActivityResult(requestCode, resultCode, data);
 
-        // AddItem.java
-        if(requestCode == BARCODE_ADD) {
-            // 지금 아래 disabled 해놓은 코드는 MANUAL_ADD 부분이 해줄거라서..
-            if(resultCode == RESULT_OK) {       // 단순히 사용자가 인식 취소 누른 경우
-            }
-            else if(resultCode == RESULT_CANCELED) {    // 식품안전나라 탐색에서 ERROR
-                // 바코드가 없거나
-                // 카메라 권한 denied
-                Log.i("아아아악:Something went wrong with the API..", "식품안전나라API");
-            }
-        } else if(requestCode == MANUAL_ADD) {
-            if((resultCode == ITEM_ADDED)) {       // 데이터베이스에 추가까지 마친상태
-                Item newItem = (Item) data.getParcelableExtra("NEW_ITEM");
-                categoryItemList.add(newItem);
-                //customListAdapter.notifyItemInserted(0);
-            } else if(resultCode == ITEM_EDITED){   // 아이템 수정 성공
-               //TODO
-//                categoryItemList.remove();
-//                categoryItemList.add();
-//                // customListAdapter.notifyItemChanged(?);
+        switch (requestCode) {
+//            // AddItem.java
+//            case BARCODE_ADD:
+//                if (resultCode == RESULT_OK) {       // 단순히 사용자가 인식 취소 누른 경우
+//                    break;
+//                } else if (resultCode == RESULT_CANCELED) {    // 식품안전나라 탐색에서 ERROR
+//                    // 바코드가 없거나
+//                    // 카메라 권한 denied
+//                    Log.i("아아아악:Something went wrong with the API..", "식품안전나라API");
+//                }
+//                break;
 
-
-            }
-        }
-
-        // TODO
-        // InfoItem.java
-        if(requestCode == ITEM_INFO) {
-            //임시 clickedItemId;
-            if(resultCode == RESULT_OK) {       // 데이터베이스에서 삭제
-                // TODO: 그 아이템을 ITEMS 리스트에서 삭제
-                //삭제할 아이템 아이디: data.getIntExtra("DELETED_ITEM_ID", 0);
-                //ㅣㅇ건 또 뭐야 refreshItemList();
-
-                switch(data.getStringExtra("ITEM_USED")){
-                    case "all":         // 모두 먹음
-
-                        break;
-                    case "portion":     // 1회분 먹음, 단순 업데이트
-                        //ITEM_MAP.get(clickedItemId).portion =
-                        break;
+            case MANUAL_ADD:        // 바코드 추가인 경우도 여기에서 처리됨
+                if ((resultCode == ITEM_ADDED)) {       // 데이터베이스에 추가까지 마친상태
+                    Item newItem = (Item) data.getParcelableExtra("NEW_ITEM");
+                    // TODO: 여기에 문제, 아이템 추가 안된다 리사이클러에 문제있다하고
+                    //categoryItemList.add(newItem);
+                    //customListAdapter.notifyItemInserted(0);
                 }
-            } else {
-            }
+                break;
+
+            // TODO
+            // InfoItem.java
+//            case ITEM_INFO:
+//                int itemID = data.getIntExtra("ITEM_ID", 0);
+//                int position = data.getIntExtra("TAB_POSITION", -1);
+//                if(resultCode == ITEM_EDITED) {
+//                    categoryItemList.remove(itemID);
+//                    //categoryItemList.add();
+//                    customListAdapter.notifyItemChanged(position);
+//                } else if(resultCode == ITEM_DELETED) {
+//                    customListAdapter.notifyItemRemoved(position);
+//                } else if(resultCode == ITEM_USED){
+//                    int updatedPortion = data.getIntExtra("USED_PORTION", 0);    // n# 형태의 값
+//                    categoryItemList.remove(categoryItemList.indexOf(itemID));
+//                    customListAdapter.notifyItemChanged(position);
+//
+//                }
+//                break;
         }
+
+
+//        if(requestCode == ITEM_INFO) {
+//            //임시 clickedItemId;
+//            if(resultCode == RESULT_OK) {       // 데이터베이스에서 삭제
+//                // TODO: 그 아이템을 ITEMS 리스트에서 삭제
+//                //삭제할 아이템 아이디: data.getIntExtra("DELETED_ITEM_ID", 0);
+//                //ㅣㅇ건 또 뭐야 refreshItemList();
+//
+//                switch(data.getStringExtra("ITEM_USED")){
+//                    case "all":         // 모두 먹음
+//
+//                        break;
+//                    case "portion":     // 1회분 먹음, 단순 업데이트
+//                        //ITEM_MAP.get(clickedItemId).portion =
+//                        break;
+//                }
+////            } else {
+//            }
+//        }
     }
+
 
 
     @Override
@@ -590,15 +527,13 @@ public class AppMain<ActivityFabBinding> extends AppCompatActivity implements Cu
                     }
                     Item singleItem = new Item(id, name, product, barcode, exp, portion, category, photo, memo, pin);
                     newITEMS.add(singleItem);          // 갱신될 공간에 ist<Item> 구조체에 추가
-                    // 해시맵 사용, 아이템 추가 시 아이디 없이 할 수 있게 id 쌍 따로 저장, 구조체 자체에는 아이디 미포함
+
+                    //  해시맵 사용, 아이템 추가 시 아이디 없이 할 수 있게 id 쌍 따로 저장, 구조체 자체에는 아이디 미포함
                     ITEM_MAP.put(id, singleItem);
                     COUNT++;
                 } while (cursor.moveToNext());
             }
         }
-        // TODO; 임시
-        //customListAdapter.notifyDataSetChanged();
-
         return newITEMS;
     }
 }

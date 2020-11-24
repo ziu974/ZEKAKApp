@@ -20,7 +20,7 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.zekak.AppMain.Item;
+//import com.example.zekak.AppMain.Item;
 
 import java.io.File;
 import java.io.IOException;
@@ -96,9 +96,7 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Vi
             ///////임시 holder.iImageView.setImageBitmap(originalBm);
             holder.iNameView.setText(itemDisplay.get(position).name);
             holder.iExpView.setText(itemDisplay.get(position).exp);
-            //TODO FAKE
-            //holder.iPortionView.setProgress(used/divided * 100);
-            holder.iPortionView.setProgress(66);
+            holder.iPortionView.setProgress(used/divided * 100);
             if(itemDisplay.get(position).flag){     // 핀 ON인 경우(default: OFF)
                 holder.iPinView.setVisibility(View.VISIBLE);
 
@@ -162,10 +160,7 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Vi
     }
 
     @Override
-    public long getItemId(int position) {
-        return super.getItemId(position);
-        // or
-        //AppMain.ITEM_MAP.get(?);
-
+    public long getItemId(int position) {       // CODE: 갱신, 고유 id 연결해서 어댑터에게 setHasStableIds 알릴 때 활용
+        return itemDisplay.get(position).getId();
     }
 }

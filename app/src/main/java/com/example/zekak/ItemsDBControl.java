@@ -8,9 +8,7 @@ import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.zekak.AppMain.Item;
-
-public class ItemsDBControl extends AppCompatActivity {
+public class ItemsDBControl {
     Context context;
     ItemsDBHelper helper;
     SQLiteDatabase db;
@@ -21,7 +19,7 @@ public class ItemsDBControl extends AppCompatActivity {
     public ItemsDBControl(Context context){
         this.context = context;
         helper = new ItemsDBHelper(context);
-        db = context.openOrCreateDatabase(helper.DATABASE_NAME, MODE_PRIVATE, null);
+        db = context.openOrCreateDatabase(helper.DATABASE_NAME, Context.MODE_PRIVATE, null);
     }
 
 
@@ -42,6 +40,7 @@ public class ItemsDBControl extends AppCompatActivity {
 
         if(db.insert(helper.TABLE_NAME, null, values) > 0){
             Log.i("데이터베이스에 데이터 insert 됨", item.name);
+            Log.i("items.db - Inserted", item.name);    // TODO: 이게 더 낫나
             //db.close();
             return true;
         } else {
@@ -73,7 +72,7 @@ public class ItemsDBControl extends AppCompatActivity {
     }
 
     public boolean edit(Item item, int itemID){
-        db = helper.getWritableDatabase();
+        //db = helper.getWritableDatabase();
         String whereClause = "ID = "+ itemID;
         ContentValues values = new ContentValues();
 
@@ -94,7 +93,7 @@ public class ItemsDBControl extends AppCompatActivity {
     }
 
     public boolean usePortion(int itemID, int value) {
-        db = helper.getWritableDatabase();
+        //db = helper.getWritableDatabase();
         String whereClause = "ID = "+ itemID;
         ContentValues values = new ContentValues();
         values.put(helper.PORTION, value);
@@ -108,7 +107,7 @@ public class ItemsDBControl extends AppCompatActivity {
 
 
     public int delete(String deleteType, String value) {
-        db = helper.getWritableDatabase();
+        //db = helper.getWritableDatabase();
         String selection;
         String whereClause;
         String[] selectionArgs = {value};
